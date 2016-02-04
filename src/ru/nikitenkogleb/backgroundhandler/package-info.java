@@ -1,6 +1,6 @@
 /*
  *  package-info.java
- *  BackgroundHandler
+ *  Background Handler
  *  
  *  The MIT License (MIT)
  *  

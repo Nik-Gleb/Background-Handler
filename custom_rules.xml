@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	custom_rules.xml
+	Background Handler
+
+	The MIT License (MIT)
+
+	Copyright (c) 2016 Gleb Nikitenko
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy
+	of this software and associated documentation files (the "Software"), to deal
+	in the Software without restriction, including without limitation the rights
+	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	copies of the Software, and to permit persons to whom the Software is
+	furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all
+	copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+	SOFTWARE.
+ -->
+
+<!-- ====================================================================== 
+
+     BackgroundHandler Build File   
+     
+     Describes the scripts of build for multi-abi's production assemblies.
+     
+     ** DO NOT USE THIS FILE DIRECTLY **.
+     This build file is imported by the project build file.
+     custom_rules.xml just is a part of common build scenario.
+     You should use build.xml from the root of the project folder.
+     
+     See: "production" target for more info
+                   
+     Gleb Nikitenko
+     Jan 29, 2016
+                                                                     
+     ====================================================================== -->
+
+<project name="custom_rules" default="production"
+	xmlns:git="antlib:com.rimerosolutions.ant.git"
+	xmlns:if="ant:if" xmlns:unless="ant:unless"><description>
+	The distribution build file for multi-abi's production assemblies.
+	Copyright (C) 2016, IT-Project Inc. All Rights Reserved.
+</description>
+	
+	<!--
+		 Follows:
+        - custom task definitions,
+        - more properties (do not override those unless the whole build system is modified).
+        - macros used throughout the build,
+        - base build targets,
+        - debug-specific build targets,
+        - release-specific build targets,
+        - instrument-specific build targets,
+        - test project-specific build targets,
+        - install targets,
+        - help target
+    -->
+	
+	<!-- ******************************************************* -->
+    <!-- ******************* Build Folders ********************* -->
+    <!-- ******************************************************* -->
+	
+	<!-- 
+                            ├───build
+		Root directory          ├───extras
+		of build files.         │     ├───arm64-v8a
+		                       	│     ├───armeabi
+		Contains all necessary  │     ├───armeabi-v7a
+		files for correct       │     ├───mips
+		working this script.    │     ├───x86
+				               	│     └───x86_64
+		The build.dir should    ├───launchers
+		look approximately so:  ├───libraries
+                        		└───output
+    -->
+	<property name="build.dir" value="build"/>
+	<!-- Target build directory. -->
+	<property name="build.output.dir" value="${build.dir}/output"/>
+	<!-- Source build-files directory. -->
+	<property name="build.extras.dir" value="${build.dir}/extras"/>
+	<!-- Ant build-libs directory. -->
+	<property name="build.libs.dir" value="${build.dir}/libraries"/>
+	<!-- Credentials build directory. -->
+	<property name="build.cred.dir" value="${build.dir}/credentials"/>
+
+	<!-- The local.properties file is created and updated by the 'android' tool.
+	         It contains the path to the SDK. It should *NOT* be checked into
+	         Version Control Systems. -->
+	<loadproperties srcFile="${build.cred.dir}/credentials.properties" />
+	
+	<!-- Google App Credentials file. -->
+	<property name="google.client.secret.file" value="${build.cred.dir}/${google.client.secret}"/>
+	<!-- Keys of signatures store -->
+	<property name="key.store" value="${build.cred.dir}/${key.store.file}"/>
+		
+	<!-- Build Mode -->
+	<condition property="is.production">
+		<and>
+			<isset property="build.mode"/>
+			<equals arg1="${build.mode}" arg2="production"/>
+		</and>
+	</condition>
+
+	<!-- ******************************************************* -->
+    <!-- ******************** Custom Tasks ********************* -->
+    <!-- ******************************************************* -->
+
+    <!-- jar file from where the tasks are loaded -->
+    <path id="android.antlibs">
+        <pathelement path="${sdk.dir}/tools/lib/ant-tasks.jar" />
+    </path>
+    <!-- Custom tasks -->
+    <taskdef resource="anttasks.properties" classpathref="android.antlibs" />
+	
+	<!-- Git support -->
+	<taskdef uri="antlib:com.rimerosolutions.ant.git"
+		resource="com/rimerosolutions/ant/git/jgit-ant-lib.xml">
+		<classpath>
+			<pathelement location="${build.libs.dir}/org.eclipse.jgit.ant-4.1.1.201511131810-r.jar"/>
+			<pathelement location="${build.libs.dir}/org.eclipse.jgit-4.1.1.201511131810-r.jar"/>
+			<pathelement location="${build.libs.dir}/jsch-0.1.53.jar"/>
+			<pathelement location="${build.libs.dir}/ant-git-tasks-1.3.1.jar"/>
+			<pathelement location="${build.libs.dir}/slf4j.jar"/>
+			<pathelement location="${build.libs.dir}/logback-core-1.1.3.jar"/>
+			<pathelement location="${build.libs.dir}/logback-classic-1.1.3.jar"/>
+		</classpath>
+	</taskdef>
+
+    
+	<!-- ******************************************************* -->
+    <!-- ******************* Build Properties ****************** -->
+    <!-- ******************************************************* -->
+	
+	
+	<!-- The full path to the build log-file. -->
+    <condition property="logfile.path" value="${build.output.dir}/${log.file}">
+        <isset property="log.file" />
+    </condition>
+    
+	<!-- Resolving property values and build mode.
+          They can be defined different ways:
+          	- from launch-configuration
+          	- from property-files
+          The launch-configuration properties will have
+          a higher priority.-->
+
+	
+	<!-- Check if git properties available -->
+	<condition property="git.available">
+		<and>
+			<isset property="git.username"/>
+			<isset property="git.password"/>
+			<isset property="git.name"/>
+			<isset property="git.email"/>
+		</and>
+	</condition>
+	
+
+    <!-- ******************************************************* -->
+    <!-- ************************ Macros *********************** -->
+    <!-- ******************************************************* -->
+	
+	<!-- = = = = = = = = = = = = = = = = =
+          macrodef: start-log          
+         = = = = = = = = = = = = = = = = = -->
+    <macrodef name="start-log">
+        <sequential>
+        	<record name="${logfile.path}" action="start"
+        		append="false" if:set="logfile.path"/>
+        </sequential>
+    </macrodef>
+	
+	<!-- = = = = = = = = = = = = = = = = =
+          macrodef: stop-log          
+         = = = = = = = = = = = = = = = = = -->
+    <macrodef name="stop-log">
+        <sequential>
+        	<record name="${logfile.path}" action="stop"
+        		if:set="logfile.path"/>            
+        </sequential>
+    </macrodef>
+	
+	<!-- = = = = = = = = = = = = = = = = =
+	
+          macrodef: setup-optimizations
+          
+          Setup ProGuard optimizations accourding current build mode.
+          
+          TEST MODE: -dontoptimize, -dontshrink
+          PRODUCTION MODE: -verbose, -optimizationpasses 5
+                    
+         = = = = = = = = = = = = = = = = = -->
+    <macrodef name="setup-optimizations">
+        <sequential>
+        	<replaceregexp file="${proguard.config}" match="-dontoptimize"
+        		replace="-verbose" byline="true"
+        		if:set="is.production"/>
+        	<replaceregexp file="${proguard.config}" match="-verbose"
+        		replace="-dontoptimize" byline="true"
+        		unless:set="is.production"/>
+        	<replaceregexp file="${proguard.config}" match="-dontshrink"
+        		replace="-optimizationpasses 5" byline="true"
+        		if:set="is.production"/>
+        	<replaceregexp file="${proguard.config}" match="-optimizationpasses 5"
+        		replace="-dontshrink" byline="true"
+        		unless:set="is.production"/>
+        </sequential>
+    </macrodef>
+	
+	
+	<!-- = = = = = = = = = = = = = = = = =
+          macrodef: send-to-device          
+         = = = = = = = = = = = = = = = = = -->
+    <macrodef name="send-to-device">
+    	<attribute name="debug"/>
+        <sequential>
+        	<condition property="is.debug">
+        		<contains string="@{debug}"
+        			substring="has.keystore"/> 
+        	</condition>
+        	<antcall target="uninstall"/>
+        	<if condition="${is.debug}">
+	    		<then><antcall target="installd"/></then>
+	    		<else><antcall target="installr"/></else>
+	    	</if>
+    	    <!--<exec executable="adb" logerror="true">
+    	    	<arg value="shell"/><arg value="am"/><arg value="start"/>
+    	   		<arg value="-a"/><arg value="android.intent.action.MAIN"/>
+    	    	<arg value="-n"/><arg value="${package.name}/${main.activity.name}"/>
+    	    </exec>-->
+        </sequential>
+    </macrodef>
+	
+	<!-- = = = = = = = = = = = = = = = = =
+          macrodef: build-target          
+         = = = = = = = = = = = = = = = = = -->
+    <macrodef name="build-target">
+        <sequential>
+        	
+        	<condition property="target.apk.suffix"
+        		value="-release" else="-debug">
+        		<isset property="has.keystore"/>
+        	</condition>
+
+        	
+        	<antcall target="clean"/>
+        	
+        	<if condition="${has.keystore}">
+	    		<then><antcall target="release"/></then>
+	    		<else><antcall target="debug"/></else>
+        	</if>
+        	
+        	<send-to-device debug="${has.keystore}"/>
+        	
+        	<move file="${out.dir}/${ant.project.name}${target.apk.suffix}.apk"
+        		tofile="${build.output.dir}/${ant.project.name}-${version.name.suffix}.apk"/>
+        	
+        	<delete dir="${out.dir}"/>
+        	
+        </sequential>
+    </macrodef>
+
+		
+
+	
+	<!-- = = = = = = = = = = = = = = = = =
+          macrodef: pack-to-zip          
+         = = = = = = = = = = = = = = = = = -->
+    <macrodef name="pack-to-zip">
+        <attribute name="version"/>
+    	<sequential>
+     		<property name="zip.build.name"
+    			value="${ant.project.name}-@{version}-.zip"/>
+    		
+	    	<property name="zip.filename"
+	    		value="${build.output.dir}/${zip.build.name}"/>
+	    	
+	    	<zip destfile="${zip.filename}"	basedir="${build.output.dir}"/>
+	    	<delete><fileset dir="${build.output.dir}" includes="*.apk"/></delete>
+    		
+    	</sequential>
+    </macrodef>
+
+	<!-- = = = = = = = = = = = = = = = = =
+          macrodef: share-release          
+         = = = = = = = = = = = = = = = = = -->
+    <macrodef name="share-release">
+    	<attribute name="fileName" default="{ant.project.name}.apk"/>
+    	<attribute name="folderId"/> 
+        <attribute name="skypeMessage" default="${ant.project.name} ready to publish." />
+    	<attribute name="clientSecretFile" default="${google.client.secret.file}"/>
+        <sequential>
+            <publish filename="@{fileName}" description="@{description}"
+            	folderid="@{folderId}" clientsecretfile="@{clientSecretFile}"
+            	login="${skype.username}" password="${skype.password}"
+        		username="${skype.name}" message="@{skypeMessage}"/>
+        </sequential>
+    </macrodef>
+	
+	<!-- = = = = = = = = = = = = = = = = =
+          macrodef: git-checkin          
+         = = = = = = = = = = = = = = = = = -->
+    <macrodef name="git-checkin">
+    	<attribute name="version" default="1.0"/>
+        <sequential>
+           	<if condition="${git.available}">
+           		<then>
+        	    	<git:settings refId="git.settings"
+        	    		username="${git.username}" password="${git.password}"
+        	    		name="${git.name}" email="${git.email}"/>
+        	    	<git:git directory="." verbose="true" settingsRef="git.settings">
+        	    		<add directory="."/>
+        	    		<commit message="${ant.project.name} v${version} release"
+        	    			brandedmessage="${ant.project.name} v${version} release"/>
+        	    		<push/>
+        	    	</git:git>
+            	</then>
+           	</if>    	
+        </sequential>
+    </macrodef>
+
+	
+    <!-- ******************************************************* -->
+    <!-- ******************** Build Targets ******************** -->
+    <!-- ******************************************************* -->
+	
+	<!-- - - - - - - - - - - - - - - - - -
+	 
+          target: -init
+          
+          The initial target.
+                                
+         - - - - - - - - - - - - - - - - - -->
+    <target name="-init">
+    	
+    	<!-- Getting AndroidManifest.xml header. -->
+    	<xpath input="${manifest.file}"	expression="/manifest/@android:versionCode"
+    		output="current.version.code"/>
+    	<xpath input="${manifest.file}" expression="/manifest/@android:versionName"
+    		output="current.version.name"/>
+		<xpath input="${manifest.file}" expression="/manifest/@package"
+    		output="package.name"/>
+		<xpath input="${manifest.file}" output="main.activity.name"
+    		expression="/manifest/application/activity/@android:name"/>
+    	
+    	<!-- A vername-based file suffix -->
+    	<propertybyreplace name="version.name.suffix"
+    		input="-${current.version.name}" replace="." with="-"/>
+
+    </target>
+	
+	<!-- =================================
+     
+          target: production
+          
+          Builds multi-abi's production assemblies.
+          
+          Build mode depends on the properties defined 
+          in the build.properties.
+          (see: build.properties - Support ABI'S)
+          
+          TEST MODE:
+          		-	Each apk file will be installed and runs on a 
+          			device or emulator.
+          
+          PRODUCTION MODE:
+          		-	Proguard shrinking and byte-code optimization 
+          			will be applied for each target ABI.
+          			(See proguard-project.txt)
+          		-	All apks will be packed to common zip-archive.
+          			(Let's call it 'zip-bundle')
+          		-	After, the script will try to publish a 'zip-bundle' 
+          			(see build.properties - Credentials) and/or checkin 
+          			project to the git-repository.
+          			(only for projects already links with git,
+          			and when defined appropriate credentials,
+          			(see build.properties - Credentials)
+          			
+         PUBLISHING STEPS:
+         		-	Upload "zip-bundle" to Google Drive, and get back 
+         			a file id.
+         		-	Generate Skype-message:
+         				The message-prompt(header) will be contains 
+         			info about name of project and current version name.
+         				If file id exists (this	talk about sucessfull 
+         			completing previous step), will	be generated a 
+         			download-link and append to end of message.
+         		-	Send Skype-notification TO user and FROM user 
+         			names specified in credentials.property - file.
+         		-	Execute "git commit" and "git push" for current project.
+         			(commit message, should be defined too in credentials.property)  		
+                      
+         ================================= -->
+    <target name="production" depends="-init"
+    	description="Builds multi-abi's production assemblies.">
+    	
+    	<!--<share-release filename="build/output/SimpleApplication.zip"
+    						folderid="0B7wlRzK_cqTAb1hnd2trLTBQa2s"/>-->
+    	
+    	<start-log/><setup-optimizations/>
+    	
+    	<build-target/>
+    	
+    	<stop-log/>
+    	
+    	<!--<if condition="${production.mode}">
+    		<then>
+		    	<pack-to-zip version="${version.name.suffix}"/>
+				<share-release filename="${zip.filename}"
+					folderid="0B7wlRzK_cqTAb1hnd2trLTBQa2s"/>
+    			<git-checkin version="current.version.name"/>
+    		</then>
+	    </if>-->
+    	
+    </target>
+		
+</project>
