@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <issue id="IconDipSize">
+        <ignore path="res/drawable-xxhdpi/common_full_open_on_phone.png" />
+    </issue>
+    <issue id="IconDuplicatesConfig">
+        <ignore path="res/drawable-xxhdpi/common_full_open_on_phone.png" />
+    </issue>
+    <issue id="MissingTranslation" severity="ignore">
+        <ignore path="res/values/admob_strings.xml" />
+        <ignore path="res/values/auth_strings.xml" />
+        <ignore path="res/values/base_strings.xml" />
+    </issue>
+</lint>

@@ -25,7 +25,7 @@
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 	SOFTWARE.
  -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 	<!-- The name of this application. -->
     <string name="app_name">Background Handler</string>
 </resources>

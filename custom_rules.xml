@@ -101,6 +101,10 @@
 	<property name="google.client.secret.file" value="${build.cred.dir}/${google.client.secret}"/>
 	<!-- Keys of signatures store -->
 	<property name="key.store" value="${build.cred.dir}/${key.store.file}"/>
+	<!-- Absolute path to android ant library -->
+	<property name="android.antlibs.path"
+		value="${sdk.dir}${file.separator}tools${file.separator}lib${file.separator}ant-tasks.jar"/>
+
 		
 	<!-- Build Mode -->
 	<condition property="is.production">
@@ -116,10 +120,14 @@
 
     <!-- jar file from where the tasks are loaded -->
     <path id="android.antlibs">
-        <pathelement path="${sdk.dir}/tools/lib/ant-tasks.jar" />
+        <pathelement path="${android.antlibs.path}" />
     </path>
     <!-- Custom tasks -->
     <taskdef resource="anttasks.properties" classpathref="android.antlibs" />
+	
+	<echo message="${android.antlibs.path}"/>
+	
+	
 	
 	<!-- Git support -->
 	<taskdef uri="antlib:com.rimerosolutions.ant.git"
@@ -201,6 +209,7 @@
          = = = = = = = = = = = = = = = = = -->
     <macrodef name="setup-optimizations">
         <sequential>
+        	<echo message="Setup Optimizations"/>
         	<replaceregexp file="${proguard.config}" match="-dontoptimize"
         		replace="-verbose" byline="true"
         		if:set="is.production"/>
@@ -264,7 +273,7 @@
         	<move file="${out.dir}/${ant.project.name}${target.apk.suffix}.apk"
         		tofile="${build.output.dir}/${ant.project.name}-${version.name.suffix}.apk"/>
         	
-        	<delete dir="${out.dir}"/>
+        	<!--<delete dir="${out.dir}"/>-->
         	
         </sequential>
     </macrodef>
@@ -341,7 +350,7 @@
                                 
          - - - - - - - - - - - - - - - - - -->
     <target name="-init">
-    	
+    	<echo message="Init"/>
     	<!-- Getting AndroidManifest.xml header. -->
     	<xpath input="${manifest.file}"	expression="/manifest/@android:versionCode"
     		output="current.version.code"/>
@@ -408,6 +417,25 @@
     	
     	<start-log/><setup-optimizations/>
     	
+    	<exec executable="${lint}" failonerror="false"
+    		resultproperty="lint.result">
+    				<arg value="--exitcode"/>
+    				<arg value="--text"/><arg value="stdout"/>
+    				<arg value="--html"/><arg value="${lint.out.html}"/>
+    				<arg value="--xml"/><arg value="${lint.out.xml}"/>
+    				<arg value="--sources"/><arg value="${source.absolute.dir}:${gen.absolute.dir}"/>
+    				<arg value="--resources"/><arg value="${resource.absolute.dir}"/>
+    				<arg value="--libraries"/><arg value="${jar.libs.absolute.dir}"/>
+    				<arg value="--classpath"/><arg value="${out.classes.absolute.dir}"/>
+    				<arg value="."/>
+    	</exec>
+    	
+    	<condition property="lint.failed">
+    		<not><equals arg1="${lint.result}" arg2="0"/></not>
+    	</condition>
+    	
+    	<fail message="Lint failed!" if="lint.failed"/>
+    	
     	<build-target/>
     	
     	<stop-log/>
@@ -422,5 +450,30 @@
 	    </if>-->
     	
     </target>
+	
+	<!-- ================================= 
+          target: -pre-clean              
+         ================================= -->
+   <!-- <target name="-pre-clean" depends="-init" description="description">
+        
+    	<setup-optimizations/>
+    	
+    	<exec executable="${lint}" failonerror="true">
+    				<arg value="-text"/><arg value="stdout"/>
+    	    		<arg value="-html"/><arg value="${lint.out.html}"/>
+    	    		<arg value="-xml"/><arg value="${lint.out.xml}"/>
+    	    		<arg value="-sources"/><arg value="${source.absolute.dir}:${gen.absolute.dir}"/>
+    				<arg value="-resources"/><arg value="${resource.absolute.dir}"/>
+    				<arg value="-libraries"/><arg value="${jar.libs.absolute.dir}"/>
+    				<arg value="-classpath"/><arg value="${out.classes.absolute.dir}"/>
+    				<arg value="."/>
+    	    	</exec>
+    	    	    
+    	
+    	<echo message="OK"/>
+    	
+    </target>-->
+
+
 		
 </project>

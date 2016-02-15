@@ -36,10 +36,9 @@
         android:maxSdkVersion="23"/>
         
 	<application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/Theme.BackgroundHandler" >
-    </application>
+        android:theme="@style/Theme.BackgroundHandler"/>
 
 </manifest>
