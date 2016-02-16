@@ -2,11 +2,14 @@
 package ru.nikitenkogleb.backgroundhandler;
 
 import android.app.Activity;
+import android.app.LoaderManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.Loader;
 import android.os.Bundle;
 
 public class MainActivity extends Activity implements MainReceiver.Callbacks {
@@ -14,7 +17,7 @@ public class MainActivity extends Activity implements MainReceiver.Callbacks {
     private static final int IDN_DEFAULT = 0;
     private static final int IDA_DEFAULT = 0;
     
-    private MainFragment mResidentFragment = null;
+    private MainFragment mMainFragment = null;
 
     @Override
     protected final void onCreate(Bundle savedInstanceState) {
@@ -41,11 +44,11 @@ public class MainActivity extends Activity implements MainReceiver.Callbacks {
     @Override
     protected final void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        if (mResidentFragment == null) {
+        if (mMainFragment == null) {
             
             final Bundle extras = new Bundle();
             extras.putString("action", getIntent().getAction());
-            mResidentFragment = MainFragment.newInstance(getFragmentManager(),
+            mMainFragment = MainFragment.newInstance(getFragmentManager(),
                     getIntent());
         }
     }
@@ -54,21 +57,21 @@ public class MainActivity extends Activity implements MainReceiver.Callbacks {
     @Override
     protected final void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        mResidentFragment = (MainFragment) getFragmentManager().
+        mMainFragment = (MainFragment) getFragmentManager().
                 getFragment(savedInstanceState, MainFragment.TAG);
     }
     
     /** {@inheritDoc} */
     @Override
     protected final void onSaveInstanceState(Bundle outState) {
-        getFragmentManager().putFragment(outState, MainFragment.TAG, mResidentFragment);
+        getFragmentManager().putFragment(outState, MainFragment.TAG, mMainFragment);
         super.onSaveInstanceState(outState);
     }
     
     /** {@inheritDoc} */
     @Override
     protected final void onDestroy() {
-        mResidentFragment = null;
+        mMainFragment = null;
         System.out.println("MainActivity.onDestroy()");
         super.onDestroy();
     }
@@ -77,7 +80,7 @@ public class MainActivity extends Activity implements MainReceiver.Callbacks {
     @Override
     protected final void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        mResidentFragment.onNewIntent(intent);
+        mMainFragment.onNewIntent(intent);
     }
 
     /** {@inheritDoc} */
@@ -85,6 +88,10 @@ public class MainActivity extends Activity implements MainReceiver.Callbacks {
     public final void onInit(String action, Bundle extras) {
         System.out.println("MainActivity.onInit() - " + action);
         MyIntentService.startActionFoo(this, "a1", "a2");
+        
+        
+        
+       
     }
 
     /** {@inheritDoc} */
