@@ -1,6 +1,6 @@
 /*
- *	Utils.java
- *	Background Handler
+ *	BaseFragment.java
+ *	BackgroundHandler
  *
  *  Copyright (c) 2016 Nikitenko Gleb.
  *
@@ -24,37 +24,23 @@
  */
 package ru.nikitenkogleb.backgroundhandler;
 
+import android.app.Fragment;
+import android.text.TextUtils;
+
 /**
- * Common Utils class.
+ * Base Fragment.
  *
  * @author Gleb Nikitenko
  * @version 1.0
- * @since Jan 29, 2016
+ * @since Feb 16, 2016
  */
-public final class Utils {
-
-    /** Constructs a new Utils. */
-    public Utils() {}
+abstract class BaseFragment extends Fragment {
     
-    public final void method1() {
-        System.out.println("Utils.method1()");
-        method2();
+    /** Constructs a new BaseFragment. */
+    BaseFragment() {
+        setRetainInstance(true);
     }
     
-    private final void method2() {
-        System.out.println("Utils.method2()");
-        method3();
-    }
-
-    private final void method3() {
-        System.out.println("Utils.method3()");
-        method4();
-    }
-
-    private final void method4() {
-        System.out.println("Utils.method4()");
-        throw new RuntimeException("my exception");
-    }
 
 
 }

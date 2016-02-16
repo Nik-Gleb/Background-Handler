@@ -23,9 +23,11 @@
 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-	SOFTWARE.
- -->
+	SOFTWARE.
+-->
 <resources xmlns:tools="http://schemas.android.com/tools">
-	<!-- The name of this application. -->
+    <!-- The name of this application. -->
     <string name="app_name">Background Handler</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="hello_world">Hello world!</string>
 </resources>

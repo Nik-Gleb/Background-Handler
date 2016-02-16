@@ -118,17 +118,6 @@
     <!-- ******************** Custom Tasks ********************* -->
     <!-- ******************************************************* -->
 
-    <!-- jar file from where the tasks are loaded -->
-    <path id="android.antlibs">
-        <pathelement path="${android.antlibs.path}" />
-    </path>
-    <!-- Custom tasks -->
-    <taskdef resource="anttasks.properties" classpathref="android.antlibs" />
-	
-	<echo message="${android.antlibs.path}"/>
-	
-	
-	
 	<!-- Git support -->
 	<taskdef uri="antlib:com.rimerosolutions.ant.git"
 		resource="com/rimerosolutions/ant/git/jgit-ant-lib.xml">
@@ -241,11 +230,11 @@
 	    		<then><antcall target="installd"/></then>
 	    		<else><antcall target="installr"/></else>
 	    	</if>
-    	    <!--<exec executable="adb" logerror="true">
+    	    <exec executable="adb" logerror="true">
     	    	<arg value="shell"/><arg value="am"/><arg value="start"/>
     	   		<arg value="-a"/><arg value="android.intent.action.MAIN"/>
     	    	<arg value="-n"/><arg value="${package.name}/${main.activity.name}"/>
-    	    </exec>-->
+    	    </exec>
         </sequential>
     </macrodef>
 	
@@ -415,7 +404,7 @@
     	<!--<share-release filename="build/output/SimpleApplication.zip"
     						folderid="0B7wlRzK_cqTAb1hnd2trLTBQa2s"/>-->
     	
-    	<start-log/><setup-optimizations/>
+    	<!--<start-log/>--><setup-optimizations/>
     	
     	<exec executable="${lint}" failonerror="false"
     		resultproperty="lint.result">
@@ -438,7 +427,7 @@
     	
     	<build-target/>
     	
-    	<stop-log/>
+    	<!--<stop-log/>-->
     	
     	<!--<if condition="${production.mode}">
     		<then>
