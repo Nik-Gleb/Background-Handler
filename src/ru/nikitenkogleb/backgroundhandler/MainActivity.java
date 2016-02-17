@@ -11,6 +11,9 @@ import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import java.util.Locale;
 
 public class MainActivity extends Activity implements MainReceiver.Callbacks {
     
@@ -18,18 +21,22 @@ public class MainActivity extends Activity implements MainReceiver.Callbacks {
     private static final int IDA_DEFAULT = 0;
     
     private MainFragment mMainFragment = null;
-
+    
     @Override
     protected final void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        System.out.println("MainActivity.onCreate()");
+        LeaksDetector.onCreate(this);
+        
+        /*if (BuildConfig.DEBUG)
+            mRootView = getWindow().getDecorView()
+            .findViewById(android.R.id.content);*/
         
         //new Notification.Builder(this)
         
         final Intent intent = new Intent(this, MainActivity.class).setAction("notification");
         
-        ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
+        /*((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
         .notify(IDN_DEFAULT, new Notification.Builder(this)
                 .setAutoCancel(true)
                 .setSmallIcon(R.mipmap.ic_launcher)
@@ -37,7 +44,7 @@ public class MainActivity extends Activity implements MainReceiver.Callbacks {
                 .setContentText("Notification")
                 .setContentIntent(PendingIntent.getActivity(this, IDA_DEFAULT,
                         intent, PendingIntent.FLAG_ONE_SHOT))
-                .build());
+                .build());*/
     }
     
     /** {@inheritDoc} */
@@ -72,7 +79,16 @@ public class MainActivity extends Activity implements MainReceiver.Callbacks {
     @Override
     protected final void onDestroy() {
         mMainFragment = null;
-        System.out.println("MainActivity.onDestroy()");
+       
+        /*if (mRootView != null) {
+            ConfigurationCallback.unbindReferences(mRootView);
+            mRootView = null;
+            Log.println(Log.VERBOSE, "MainActivity", String.format(Locale.getDefault(),
+                    "Heap after activity %s:  %.2f MB", Integer.toHexString(hashCode()),
+                    ConfigurationCallback.getMemoryUsage() / 1048576.0f));
+        }*/
+        
+        LeaksDetector.onDestroy();
         super.onDestroy();
     }
     
@@ -87,11 +103,16 @@ public class MainActivity extends Activity implements MainReceiver.Callbacks {
     @Override
     public final void onInit(String action, Bundle extras) {
         System.out.println("MainActivity.onInit() - " + action);
-        MyIntentService.startActionFoo(this, "a1", "a2");
-        
-        
-        
-       
+        //MyIntentService.startActionFoo(this, "a1", "a2");
+        /*final Activity fuckingActivity = this;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {Thread.sleep(8000);} catch (InterruptedException e) {e.printStackTrace();}
+                Log.println(Log.VERBOSE, "MainActivity", String.format(Locale.getDefault(),
+                        "Keep activity %s", Integer.toHexString(fuckingActivity.hashCode())));
+            }
+        }).start();*/
     }
 
     /** {@inheritDoc} */

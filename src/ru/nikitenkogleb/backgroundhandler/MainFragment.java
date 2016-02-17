@@ -32,6 +32,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 
 /**
  * Resident Fragment.
@@ -52,6 +54,9 @@ public final class MainFragment extends Fragment {
     
     /** The Main Broadcast receiver. */
     private MainReceiver mMainBroadcastReceiver = null;
+    
+    /** The Configuration Callback. */
+    private ConfigurationCallback mConfigurationCallback = null;
     
     /** Constructs a new BaseFragment. */
     public MainFragment() {setRetainInstance(true);}
@@ -116,16 +121,36 @@ public final class MainFragment extends Fragment {
 
         mMainBroadcastReceiver = new MainReceiver(mContext,
                 (Intent) getArguments().getParcelable(ARG_INTENT));
+        
+        mConfigurationCallback = new ConfigurationCallback(mContext.getApplicationContext());
+        
     }
     
     /** {@inheritDoc} */
     @Override
     public final void onDestroy() {
         
+        mConfigurationCallback.onDestroy();
+        mConfigurationCallback = null;
+        
         mMainBroadcastReceiver.onDestroy();
         mMainBroadcastReceiver = null;
         
         super.onDestroy();
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void onResume() {
+        super.onResume();
+        mConfigurationCallback.onResume();
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public final void onPause() {
+        mConfigurationCallback.onPause();
+        super.onPause();
     }
     
     /**
