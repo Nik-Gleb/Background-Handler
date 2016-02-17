@@ -33,6 +33,7 @@ import android.widget.ListView;
 import java.util.Locale;
 
 /**
+ * https://bitbucket.org/Nik-Gleb/secure-vpn/pull-requests/new?source=v3.5.2&t=1
  * Memory Leaks Detector.
  * 
  * Provides any useful Java-Heap Management utils. 
