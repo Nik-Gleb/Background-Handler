@@ -23,6 +23,10 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.os.Debug;
+import android.os.Environment;
+import android.os.StrictMode;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +34,12 @@ import android.webkit.WebView;
 import android.widget.AbsListView;
 import android.widget.ImageView;
 import android.widget.ListView;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 
 /**
@@ -76,7 +86,34 @@ final class LeaksDetector {
     /** @param passes {@link #mGcPasses}, {@code 1 pass} by default.  */
     static final void setGcPasses(byte passes) {mGcPasses = passes;}
     
-    ///** Allows execute periodically System Configuration Update for testing LifeCycles of your App.  */
+    /**
+     * Turn on strict mode development.
+     * 
+     * This method require to declare <i>android.permission.WRITE_EXTERNAL_STORAGE</i>
+     */
+    static final void enableStrictMode() {enableStrictMode(null);}
+    
+    /**
+     * Turn on strict mode development.
+     * 
+     * This method require to declare <i>android.permission.WRITE_EXTERNAL_STORAGE</i>
+     * 
+     * @param dumpFileName the name of file for dumping heap, after VmPolicy Crashes.
+     */
+    static final void enableStrictMode(String dumpFileName) {
+        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+                .detectDiskReads().detectDiskWrites().detectNetwork().penaltyLog()
+                .detectResourceMismatches().detectCustomSlowCalls().build());
+        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                .detectLeakedSqlLiteObjects().detectCleartextNetwork()
+                .detectLeakedClosableObjects().detectFileUriExposure()
+                .detectLeakedRegistrationObjects()
+                .penaltyLog().penaltyDeath().detectActivityLeaks().build());
+        System.setErr(new PrintStreamStrictModeKills(System.err, dumpFileName));
+
+    }
+    
+    /** Allows execute periodically System Configuration Update for testing LifeCycles of your App.  */
     //static final void scheduleConfigUpdates() {mConfigUpdater = Fragment.}
 
     /**
@@ -220,6 +257,91 @@ final class LeaksDetector {
         gc(); final long freeMemory = Runtime.getRuntime().freeMemory();
         return totalMemory - freeMemory;
     }
+    
+    /**
+     * Dump memory trace.
+     *
+     * @author Gleb Nikitenko
+     * @version 1.0
+     * @since Feb 05, 2016
+     */
+    private static final class PrintStreamStrictModeKills extends PrintStream {
+        
+        /** The LOG-CAT TAG. */
+        private static final String TAG = "Strict Mode";
+        
+        /** The start of Strict Mode VM Policy Crash-Message. */
+        private static final String STRICT_MODE_VM_POLICY_MESSAGE =
+                "StrictMode VmPolicy violation with POLICY_DEATH;";
+        
+        /** The name of heap-dump<i>(hprof)</i> file by default. */
+        private static final String DEFAULT_DUMP_FILE_NAME =
+                "strictmode-violation.hprof";
+        
+        /** The name of heap-dump<i>(hprof)</i> file. */
+        private final String mDumpFileName;
+        
+        /** {@inheritDoc} */
+        private PrintStreamStrictModeKills(OutputStream out, String dumpFileName) {
+            super(out);
+            mDumpFileName = dumpFileName;
+        }
+        
+        /** {@inheritDoc} */
+        private PrintStreamStrictModeKills(File file, String dumpFileName)
+                throws FileNotFoundException {
+            super(file);
+            mDumpFileName = dumpFileName;
+        }
+        
+        /** {@inheritDoc} */
+        private PrintStreamStrictModeKills(String fileName, String dumpFileName)
+                throws FileNotFoundException {
+            super(fileName);
+            mDumpFileName = dumpFileName;
+        }
+        
+        /** {@inheritDoc} */
+        private PrintStreamStrictModeKills(OutputStream out, boolean autoFlush, String dumpFileName) {
+            super(out, autoFlush);
+            mDumpFileName = dumpFileName;
+        }
+        
+        /** {@inheritDoc} */
+        private PrintStreamStrictModeKills(File file, String charsetName, String dumpFileName)
+                throws FileNotFoundException, UnsupportedEncodingException {
+            super(file, charsetName);
+            mDumpFileName = dumpFileName;
+        }
+        
+        /** {@inheritDoc} */
+        private PrintStreamStrictModeKills(String fileName, String charsetName, String dumpFileName)
+                throws FileNotFoundException, UnsupportedEncodingException {
+            super(fileName, charsetName);
+            mDumpFileName = dumpFileName;
+        }
+        
+        /** {@inheritDoc} */
+        private PrintStreamStrictModeKills(OutputStream out, boolean autoFlush, String charsetName,
+                String dumpFileName) throws UnsupportedEncodingException {
+            super(out, autoFlush, charsetName);
+            mDumpFileName = dumpFileName;
+        }
 
+        /** {@inheritDoc} */
+        @Override
+        synchronized public final void println(String str) {
+            super.println(str);
+            if (!str.startsWith(STRICT_MODE_VM_POLICY_MESSAGE)) return;
+            // StrictMode is about to terminate us... do a heap dump!
+            final File dir = Environment.getExternalStorageDirectory();
+            final File dumpFile = new File(dir, TextUtils.isEmpty(mDumpFileName) ?
+                    DEFAULT_DUMP_FILE_NAME : mDumpFileName); 
+            //super.println("Dumping HPROF to: " + dumpFile);
+            try {Debug.dumpHprofData(dumpFile.getAbsolutePath());}
+            catch (IOException e) {Log.println(Log.WARN, TAG, e.getLocalizedMessage());}
+            //super.println("Dumping " + dumpFile + " succesfull!");
+        }
+    }
 
 }

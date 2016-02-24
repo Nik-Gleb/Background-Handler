@@ -176,7 +176,7 @@ public final class ConfigurationCallback implements Callback {
     static final long getMemoryUsage() {
         gc(); final long totalMemory = Runtime.getRuntime().totalMemory();
         gc(); final long freeMemory = Runtime.getRuntime().freeMemory();
-        return totalMemory - freeMemory;
+        return totalMemory - freeMemory; 
     }
     
     /**

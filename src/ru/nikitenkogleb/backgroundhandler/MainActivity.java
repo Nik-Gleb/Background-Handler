@@ -20,7 +20,7 @@ public class MainActivity extends Activity implements MainReceiver.Callbacks {
     private static final int IDN_DEFAULT = 0;
     private static final int IDA_DEFAULT = 0;
     
-    private MainFragment mMainFragment = null;
+    private HomeFragment mMainFragment = null;
     
     @Override
     protected final void onCreate(Bundle savedInstanceState) {
@@ -35,6 +35,7 @@ public class MainActivity extends Activity implements MainReceiver.Callbacks {
         //new Notification.Builder(this)
         
         final Intent intent = new Intent(this, MainActivity.class).setAction("notification");
+        
         
         /*((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
         .notify(IDN_DEFAULT, new Notification.Builder(this)
@@ -55,7 +56,7 @@ public class MainActivity extends Activity implements MainReceiver.Callbacks {
             
             final Bundle extras = new Bundle();
             extras.putString("action", getIntent().getAction());
-            mMainFragment = MainFragment.newInstance(getFragmentManager(),
+            mMainFragment = HomeFragment.newInstance(getFragmentManager(),
                     getIntent());
         }
     }
@@ -64,14 +65,14 @@ public class MainActivity extends Activity implements MainReceiver.Callbacks {
     @Override
     protected final void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        mMainFragment = (MainFragment) getFragmentManager().
-                getFragment(savedInstanceState, MainFragment.TAG);
+        mMainFragment = (HomeFragment) getFragmentManager().
+                getFragment(savedInstanceState, HomeFragment.TAG);
     }
     
     /** {@inheritDoc} */
     @Override
     protected final void onSaveInstanceState(Bundle outState) {
-        getFragmentManager().putFragment(outState, MainFragment.TAG, mMainFragment);
+        getFragmentManager().putFragment(outState, HomeFragment.TAG, mMainFragment);
         super.onSaveInstanceState(outState);
     }
     

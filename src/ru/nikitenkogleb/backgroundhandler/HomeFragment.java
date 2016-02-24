@@ -1,5 +1,5 @@
 /*
- *	ResidentFragment.java
+ *	HomeFragment.java
  *	BackgroundHandler
  *
  *  Copyright (c) 2016 Nikitenko Gleb.
@@ -32,8 +32,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 
 /**
  * Resident Fragment.
@@ -42,9 +40,9 @@ import android.os.Message;
  * @version 1.0
  * @since Feb 15, 2016
  */
-public final class MainFragment extends Fragment {
+public final class HomeFragment extends Fragment {
     
-    static final String TAG = MainFragment.class.getName();
+    static final String TAG = HomeFragment.class.getName();
     
     /** The Activities context. */
     private Context mContext = null;
@@ -59,7 +57,7 @@ public final class MainFragment extends Fragment {
     private ConfigurationCallback mConfigurationCallback = null;
     
     /** Constructs a new BaseFragment. */
-    public MainFragment() {setRetainInstance(true);}
+    public HomeFragment() {setRetainInstance(true);}
     
     /** {@inheritDoc} */
     @Override
@@ -157,8 +155,8 @@ public final class MainFragment extends Fragment {
      * @param fragmentManager current fragment manager
      * @return fragment instance
      */
-    static final MainFragment newInstance(FragmentManager fragmentManager, Intent intent) {
-        final MainFragment result = new MainFragment();
+    static final HomeFragment newInstance(FragmentManager fragmentManager, Intent intent) {
+        final HomeFragment result = new HomeFragment();
         final Bundle arguments = new Bundle();
         arguments.putParcelable(ARG_INTENT, intent);
         result.setArguments(arguments);
