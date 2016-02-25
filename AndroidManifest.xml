@@ -31,8 +31,13 @@
     android:versionName="1.0" >
     <uses-sdk
         android:maxSdkVersion="23"
-        android:minSdkVersion="16"
+        android:minSdkVersion="14"
         android:targetSdkVersion="23" />
+    
+    <!-- For testing memory leaks -->
+    <uses-permission android:name="android.permission.CHANGE_CONFIGURATION"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    
     <application
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
