@@ -53,8 +53,7 @@ public final class HomeFragment extends Fragment {
     /** The Main Broadcast receiver. */
     private MainReceiver mMainBroadcastReceiver = null;
     
-    /** The Configuration Callback. */
-    private ConfigurationCallback mConfigurationCallback = null;
+ 
     
     /** Constructs a new BaseFragment. */
     public HomeFragment() {setRetainInstance(true);}
@@ -81,6 +80,7 @@ public final class HomeFragment extends Fragment {
      */
     @SuppressWarnings("deprecation")
     private final void onAttachHoneycomb(Activity activity) {super.onAttach(activity);}
+    
     /**
      * Causes Marshmallow Super.
      * 
@@ -120,17 +120,13 @@ public final class HomeFragment extends Fragment {
         mMainBroadcastReceiver = new MainReceiver(mContext,
                 (Intent) getArguments().getParcelable(ARG_INTENT));
         
-        mConfigurationCallback = new ConfigurationCallback(mContext.getApplicationContext());
-        
     }
     
     /** {@inheritDoc} */
     @Override
     public final void onDestroy() {
         
-        mConfigurationCallback.onDestroy();
-        mConfigurationCallback = null;
-        
+         
         mMainBroadcastReceiver.onDestroy();
         mMainBroadcastReceiver = null;
         
@@ -141,14 +137,12 @@ public final class HomeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        mConfigurationCallback.onResume();
     }
     
     /** {@inheritDoc} */
     @Override
     public final void onPause() {
-        mConfigurationCallback.onPause();
-        super.onPause();
+         super.onPause();
     }
     
     /**

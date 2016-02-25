@@ -26,6 +26,9 @@ public class MainActivity extends Activity implements MainReceiver.Callbacks {
     protected final void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        
+        LeaksDetector.scheduleConfigUpdates(200);
+        LeaksDetector.enableStrictMode();
         LeaksDetector.onCreate(this);
         
         /*if (BuildConfig.DEBUG)
